@@ -7,11 +7,13 @@ def sha1(id):
 
     return hashed
 
+def concatenate(id, hashed):
+    return f"{id};{hashed}"
+
 def main():
     with open("./secure_authentication_protocol/ID.txt", mode="r", encoding="UTF-8") as file:
         id = file.read()
     hashed = sha1(id)
-
 
 if __name__ == "__main__":
     main()

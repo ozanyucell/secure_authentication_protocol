@@ -13,10 +13,8 @@ def conc(x, y):
 def session_key_generator():
     return int(random.uniform(1000000000, 9999999999))
 
-def key_generator():
+def key_generator(p, q):
     # select prime numbers
-    p=25423
-    q=29633
     e=2
     n = p * q
     phi = (p-1) * (q-1)
@@ -39,22 +37,43 @@ def GCD(x, y):
     return x
 
 def RSA(key, hashed_id):
-    return (int(hashed_id, 16) ** int(key.split(";")[0])) % int(key.split(";")[1])
+    return hex((int(hashed_id, 16) ** int(key.split(";")[0])) % int(key.split(";")[1]))[2:]
 
-def main():
+def key_RSA(key1, key2):
+    return key1 ** key2 
+
+def source(private_src, public_dst):
+
     with open("./secure_authentication_protocol/ID.txt", mode="r", encoding="UTF-8") as file:
         id = file.read()
-
     hashed = sha1(id)
-    public_key, private_key = key_generator()
 
-    k_h = str(int(public_key.split(";")[0]) ^ int(private_key.split(";")[0])) + ";" + private_key.split(";")[1]
+    k_h = str(int(public_dst.split(";")[0]) ^ int(private_src.split(";")[0])) + ";" + str(int(public_dst.split(";")[0]) ^ int(private_src.split(";")[1]))
+    cipher_id = RSA(k_h, hashed)
 
-    cipher_id = hex(RSA(k_h, hashed))[2:]
+    concatenated_id = int(f"{id}{cipher_id}", 16)
+    s_key = session_key_generator()
+    print("concatenated_id: " + str(concatenated_id) + " session key: " + str(s_key))
 
-    print(hashed)
-    print(str(public_key) + " ^ " + str(private_key) + " = " + str(k_h))
-    print(cipher_id)
+    cipher = key_RSA(concatenated_id, s_key) # NOT WORKING, SESSION KEY IS NOT APPLICABLE TO THE FUNCTION
+
+    cipher_key = RSA(s_key, public_dst)
+    last_packet = f"{cipher}{cipher_key}"
+
+    return last_packet
+
+
+def destination(private_dst, public_src):
+    return 0
+
+def main():
+    public_src, private_src = key_generator(17, 11)
+    public_dst, private_dst = key_generator(47, 31)
+
+    source_packet = source(private_src, public_dst)
+    print(source)
+    
+    destination(private_dst, public_src)
 
 if __name__ == "__main__":
     main()

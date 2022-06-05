@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 
+from codecs import ignore_errors
 import hashlib
+import math
 import random
+import time
 
 def sha1(id):
     hashed = hashlib.sha1(bytes(f"{id}",encoding="utf-8")).hexdigest()
@@ -36,7 +39,7 @@ def GCD(x, y):
         x, y = y, x % y
     return x
 
-def RSA(key, hashed_id):
+def RSA(hashed_id, key):
     key_first = int(key.split(";")[0])
     key_second = int(key.split(";")[1])
 
@@ -52,34 +55,55 @@ def source(private_src, public_dst):
     hashed = sha1(id)
     hashed = int(hashed, 16)
 
-    k_h = str(int(public_dst.split(";")[0]) ^ int(private_src.split(";")[0])) + ";" + str(int(public_dst.split(";")[0]) ^ int(private_src.split(";")[1]))
-    cipher_id = RSA(k_h, hashed)
+    k_h = str(int(public_dst.split(";")[0]) ^ int(private_src.split(";")[0])) + ";" + str(int(public_dst.split(";")[1]) ^ int(private_src.split(";")[1]))
+    cipher_id = RSA(hashed, k_h)
 
-    concatenated_id = f"{id}{cipher_id}"
+    concatenated_id = f"{id}77777{cipher_id}"
+
     s_key = session_key_generator()
     s_key = f"{str(s_key)[:5]};{str(s_key)[5:]}"
 
-    cipher = RSA(s_key, concatenated_id)
+    cipher = RSA(concatenated_id, s_key)
 
     s_key = s_key.split(";")[0] + s_key.split(";")[1]
-    cipher_key = RSA(public_dst, s_key)
-    print(cipher_key)
+    print(s_key)
+    cipher_key = RSA(s_key, public_dst)
     packet = f"{cipher};{cipher_key}"
 
     return packet
 
 
-def destination(private_dst, public_src):
-    return 0
+def destination(private_dst, public_src, packet):
+    hashed_id_src = packet.split(";")[0]
+    cipher_key_src = packet.split(";")[1]
+
+    session_key = RSA(cipher_key_src, private_dst)
+    print(session_key)
+    exit(0)
+    enc_hashed = str(RSA(hashed_id_src, session_key))
+    print(enc_hashed)
+
+    id, hashed_id = enc_hashed.split("77777")[0], enc_hashed.split("77777")[1]
+
+    dst_hashed = sha1(id)
+    dst_hashed = int(dst_hashed, 16)
+
+    k_h = str(int(private_dst.split(";")[0]) ^ int(public_src.split(";")[0])) + ";" + str(int(private_dst.split(";")[1]) ^ int(public_src.split(";")[1]))
+    hash_val = RSA(hashed_id, k_h)
+
+    if hash_val == dst_hashed:
+        print("True")
+    else:
+        print("False")
 
 def main():
     public_src, private_src = key_generator(17, 11)
     public_dst, private_dst = key_generator(47, 31)
 
     source_packet = source(private_src, public_dst)
-    print(source_packet)
+    #print(source_packet)
     
-    destination(private_dst, public_src)
+    destination(private_dst, public_src, source_packet)
 
 if __name__ == "__main__":
     main()

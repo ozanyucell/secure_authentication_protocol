@@ -1,5 +1,3 @@
-import hashlib
-
 key = 1234567890
 
 message = "ffa16cb29ac811eeaa2e6f70923b1a4fccad55aa"

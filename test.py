@@ -1,6 +1,4 @@
-import math
-
-
+import hashlib
 import math
 
 def gcd(a, b):
@@ -12,13 +10,13 @@ def coprime(a, b):
     return gcd(a, b) == 1
 
 def key_generator():   
-    p = 17
-    q = 11
+    p = 61
+    q = 53
     n = p*q
     phi = math.lcm(p-1, q-1)
 
     check = False
-    e = 5
+    e = 13
     while not check:
         check = coprime(phi, e)
         if check == True:
@@ -27,7 +25,6 @@ def key_generator():
         
     d = pow(e, -1, phi)
     return f"{e};{n}", f"{d};{n}"
-
 
 def RSA(hashed_id, key):
     key_first = int(key.split(";")[0])
@@ -38,23 +35,28 @@ def RSA(hashed_id, key):
 
     return encrypted
 
+def sha1(id):
+    hashed = hashlib.sha1(bytes(f"{id}",encoding="utf-8")).hexdigest()
+    return hashed
+
 with open("./secure_authentication_protocol/ID.txt", mode="r", encoding="UTF-8") as file:
     id = file.read()
 
 public_src, private_src = key_generator()
-#public_dst, private_dst = key_generator(127, 31)
+# public_dst, private_dst = key_generator(127, 31)
 
-#k_h = str(int(private_src.split(";")[0]) ^ int(public_dst.split(";")[0])) + ";" + str(int(private_src.split(";")[1]) ^ int(public_dst.split(";")[1]))
+# k_h = str(int(private_src.split(";")[0]) ^ int(public_dst.split(";")[0])) + ";" + str(int(private_src.split(";")[1]) ^ int(public_dst.split(";")[1]))
 
 print(f"Public Key is: {public_src}")
 print(f"Private Key is: {private_src}")
 #print("DST Public: " + public_dst + " | SRC Private: " + private_dst)
 #print(k_h)
+id = int(sha1(id), 16)
 
-test = RSA(id, private_src)
-print(test)
+cipher = RSA(id, private_src)
+print(cipher)
 
-#k_h2 = str(int(private_dst.split(";")[0]) ^ int(public_src.split(";")[0])) + ";" + str(int(private_dst.split(";")[1]) ^ int(public_src.split(";")[1]))
-#print(k_h2)
+# k_h2 = str(int(private_dst.split(";")[0]) ^ int(public_src.split(";")[0])) + ";" + str(int(private_dst.split(";")[1]) ^ int(public_src.split(";")[1]))
+# print(k_h2)
 
-print(RSA(test, public_src))
+print(RSA(cipher, public_src))

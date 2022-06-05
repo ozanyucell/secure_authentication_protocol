@@ -1,25 +1,33 @@
-def key_generator(p, q):
-    # select prime numbers
-    e=2
-    n = p * q
-    phi = (p-1) * (q-1)
+import math
 
-    while (e<phi):
-        if (GCD(e,phi)==1):
+
+import math
+
+def gcd(a, b):
+    while b != 0:
+        a, b = b, a % b
+    return a
+
+def coprime(a, b):
+    return gcd(a, b) == 1
+
+def key_generator():   
+    p = 17
+    q = 11
+    n = p*q
+    phi = math.lcm(p-1, q-1)
+
+    check = False
+    e = 5
+    while not check:
+        check = coprime(phi, e)
+        if check == True:
             break
-        e+=1
-
+        e = e + 1
+        
     d = pow(e, -1, phi)
+    return f"{e};{n}", f"{d};{n}"
 
-    public_key = f"{e};{n}"
-    private_key = f"{d};{n}"
-    
-    return public_key, private_key
-
-def GCD(x, y):
-    while y != 0:
-        x, y = y, x % y
-    return x
 
 def RSA(hashed_id, key):
     key_first = int(key.split(";")[0])
@@ -33,14 +41,20 @@ def RSA(hashed_id, key):
 with open("./secure_authentication_protocol/ID.txt", mode="r", encoding="UTF-8") as file:
     id = file.read()
 
-public_src, private_src = key_generator(17, 11)
-public_dst, private_dst = key_generator(47, 31)
+public_src, private_src = key_generator()
+#public_dst, private_dst = key_generator(127, 31)
 
-k_h = str(int(public_dst.split(";")[0]) ^ int(private_src.split(";")[0])) + ";" + str(int(public_dst.split(";")[1]) ^ int(private_src.split(";")[1]))
+#k_h = str(int(private_src.split(";")[0]) ^ int(public_dst.split(";")[0])) + ";" + str(int(private_src.split(";")[1]) ^ int(public_dst.split(";")[1]))
 
-test = RSA(id, k_h)
+print(f"Public Key is: {public_src}")
+print(f"Private Key is: {private_src}")
+#print("DST Public: " + public_dst + " | SRC Private: " + private_dst)
+#print(k_h)
+
+test = RSA(id, private_src)
 print(test)
 
-k_h2 = str(int(private_dst.split(";")[0]) ^ int(public_src.split(";")[0])) + ";" + str(int(private_dst.split(";")[1]) ^ int(public_src.split(";")[1]))
+#k_h2 = str(int(private_dst.split(";")[0]) ^ int(public_src.split(";")[0])) + ";" + str(int(private_dst.split(";")[1]) ^ int(public_src.split(";")[1]))
+#print(k_h2)
 
-print(RSA(test, k_h2))
+print(RSA(test, public_src))

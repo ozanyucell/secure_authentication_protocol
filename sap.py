@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 
-from codecs import ignore_errors
 import hashlib
-import math
 import random
-import time
 
 def sha1(id):
     hashed = hashlib.sha1(bytes(f"{id}",encoding="utf-8")).hexdigest()

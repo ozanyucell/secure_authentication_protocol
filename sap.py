@@ -37,30 +37,36 @@ def GCD(x, y):
     return x
 
 def RSA(key, hashed_id):
-    return hex((int(hashed_id, 16) ** int(key.split(";")[0])) % int(key.split(";")[1]))[2:]
+    key_first = int(key.split(";")[0])
+    key_second = int(key.split(";")[1])
 
-def key_RSA(key1, key2):
-    return key1 ** key2 
+    encrypted = (int(hashed_id) ** key_first) % key_second
+    encrypted = int(hex(encrypted)[2:], 16)
+
+    return encrypted
 
 def source(private_src, public_dst):
 
     with open("./secure_authentication_protocol/ID.txt", mode="r", encoding="UTF-8") as file:
         id = file.read()
     hashed = sha1(id)
+    hashed = int(hashed, 16)
 
     k_h = str(int(public_dst.split(";")[0]) ^ int(private_src.split(";")[0])) + ";" + str(int(public_dst.split(";")[0]) ^ int(private_src.split(";")[1]))
     cipher_id = RSA(k_h, hashed)
 
-    concatenated_id = int(f"{id}{cipher_id}", 16)
+    concatenated_id = f"{id}{cipher_id}"
     s_key = session_key_generator()
-    print("concatenated_id: " + str(concatenated_id) + " session key: " + str(s_key))
+    s_key = f"{str(s_key)[:5]};{str(s_key)[5:]}"
 
-    cipher = key_RSA(concatenated_id, s_key) # NOT WORKING, SESSION KEY IS NOT APPLICABLE TO THE FUNCTION
+    cipher = RSA(s_key, concatenated_id)
 
-    cipher_key = RSA(s_key, public_dst)
-    last_packet = f"{cipher}{cipher_key}"
+    s_key = s_key.split(";")[0] + s_key.split(";")[1]
+    cipher_key = RSA(public_dst, s_key)
+    print(cipher_key)
+    packet = f"{cipher}{cipher_key}"
 
-    return last_packet
+    return packet
 
 
 def destination(private_dst, public_src):
@@ -71,7 +77,7 @@ def main():
     public_dst, private_dst = key_generator(47, 31)
 
     source_packet = source(private_src, public_dst)
-    print(source)
+    print(source_packet)
     
     destination(private_dst, public_src)
 

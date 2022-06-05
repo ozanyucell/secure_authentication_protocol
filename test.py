@@ -36,6 +36,11 @@ with open("./secure_authentication_protocol/ID.txt", mode="r", encoding="UTF-8")
 public_src, private_src = key_generator(17, 11)
 public_dst, private_dst = key_generator(47, 31)
 
-test = RSA(id, private_src)
+k_h = str(int(public_dst.split(";")[0]) ^ int(private_src.split(";")[0])) + ";" + str(int(public_dst.split(";")[1]) ^ int(private_src.split(";")[1]))
+
+test = RSA(id, k_h)
 print(test)
-print(RSA(test, public_src))
+
+k_h2 = str(int(private_dst.split(";")[0]) ^ int(public_src.split(";")[0])) + ";" + str(int(private_dst.split(";")[1]) ^ int(public_src.split(";")[1]))
+
+print(RSA(test, k_h2))

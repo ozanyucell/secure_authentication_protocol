@@ -64,7 +64,7 @@ def source(private_src, public_dst):
     s_key = s_key.split(";")[0] + s_key.split(";")[1]
     cipher_key = RSA(public_dst, s_key)
     print(cipher_key)
-    packet = f"{cipher}{cipher_key}"
+    packet = f"{cipher};{cipher_key}"
 
     return packet
 

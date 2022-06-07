@@ -60,7 +60,7 @@ def RSA(hashed_id, key):
     return encrypted
 
 def session_key_generator():
-    return int(random.uniform(1000000000, 4999999999))
+    return int(str(int(random.uniform(10000, 49999))) + str(int(random.uniform(10000, 49999))))
 
 def bitwise_xor(x, y):
     return x ^ y
@@ -82,14 +82,8 @@ def source(id, private_src, public_dst):
     s_key_left = str(s_key)[:(len(str(s_key))//2)]
     s_key_right = str(s_key)[(len(str(s_key))//2):]
 
-    zero_incident = False
-    if s_key_right.startswith("0"): 
-        zero_incident = True
+    enc_s_key = str(RSA(s_key_left, public_dst)) + "-" + str(RSA(s_key_right, public_dst))
 
-    if zero_incident == False:
-        enc_s_key = str(RSA(s_key_left, public_dst)) + "-" + str(RSA(s_key_right, public_dst))
-    else:
-        enc_s_key = str(RSA(s_key_left, public_dst)) + "-0" + str(RSA(s_key_right, public_dst))
     print(f"enc_s_key_src: {enc_s_key}")
     src_list = list(map(str, src_list))
     src_list.append(enc_s_key)
@@ -104,14 +98,7 @@ def destination(packet, private_dst, public_src):
     enc_s_key_left = enc_s_key.split("-")[0]
     enc_s_key_right = enc_s_key.split("-")[1]
 
-    zero_incident = False
-    if enc_s_key_right.startswith("0"): 
-        zero_incident = True
-
-    if zero_incident == False:
-        s_key = int(str(RSA(enc_s_key_left, private_dst)) + str(RSA(enc_s_key_right, private_dst)))
-    else:
-        s_key = int(str(RSA(enc_s_key_left, private_dst)) + "0" +  str(RSA(enc_s_key_right, private_dst)))
+    s_key = int(str(RSA(enc_s_key_left, private_dst)) + str(RSA(enc_s_key_right, private_dst)))
     
     print(f"s_key: {s_key}")
 

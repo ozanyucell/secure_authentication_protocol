@@ -87,21 +87,22 @@ def source(id, private_src, public_dst):
         zero_incident = True
 
     if zero_incident == False:
-        enc_s_key = int(str(RSA(s_key_left, public_dst)) + str(RSA(s_key_right, public_dst)))
+        enc_s_key = str(RSA(s_key_left, public_dst)) + "-" + str(RSA(s_key_right, public_dst))
     else:
-        enc_s_key = int(str(RSA(s_key_left, public_dst)) + "0" + str(RSA(s_key_right, public_dst)))
-
+        enc_s_key = str(RSA(s_key_left, public_dst)) + "-0" + str(RSA(s_key_right, public_dst))
+    print(f"enc_s_key_src: {enc_s_key}")
+    src_list = list(map(str, src_list))
     src_list.append(enc_s_key)
     packet = conc(src_list)
 
     return packet
 
 def destination(packet, private_dst, public_src):
-    src_list = list(map(int, packet.split(";")))
+    src_list = packet.split(";")
     enc_s_key = src_list[2]
-    
-    enc_s_key_left = str(enc_s_key)[:(len(str(enc_s_key))//2)]
-    enc_s_key_right = str(enc_s_key)[(len(str(enc_s_key))//2):]
+    print(f"enc_s_key_dst: {enc_s_key}")
+    enc_s_key_left = enc_s_key.split("-")[0]
+    enc_s_key_right = enc_s_key.split("-")[1]
 
     zero_incident = False
     if enc_s_key_right.startswith("0"): 
@@ -114,8 +115,8 @@ def destination(packet, private_dst, public_src):
     
     print(f"s_key: {s_key}")
 
-    src_list[0] = bitwise_xor(src_list[0], s_key)
-    src_list[1] = bitwise_xor(src_list[1], s_key)
+    src_list[0] = bitwise_xor(int(src_list[0]), s_key)
+    src_list[1] = bitwise_xor(int(src_list[1]), s_key)
 
     id = src_list[0]
     hashed_id_src = src_list[1]

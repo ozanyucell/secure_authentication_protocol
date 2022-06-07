@@ -14,26 +14,24 @@ def H(message):
     return hashed
 
 def crc16(data: bytes):
-    data = bytearray(data)
-    poly = 0xA001
     crc = 0xFFFF
-    for b in data:
+    for b in bytearray(data):
         crc ^= (0xFF & b)
         for _ in range(0, 8):
             if (crc & 0x0001):
-                crc = ((crc >> 1) & 0xFFFF) ^ poly
+                crc = ((crc >> 1) & 0xFFFF) ^ 0xA001
             else:
                 crc = ((crc >> 1) & 0xFFFF)
 
     return np.uint16(crc)
 
-def gcd(a, b):
-    while b != 0:
-        a, b = b, a % b
-    return a
+def gcd(x, y):
+    while y != 0:
+        x, y = y, x % y
+    return x
 
-def coprime(a, b):
-    return gcd(a, b) == 1
+def coprime(x, y):
+    return gcd(x, y) == 1
 
 def key_generator(p, q):
     n = p * q
@@ -70,21 +68,19 @@ def conc(list):
 
 def source(id, private_src, public_dst):
     hashed_id = H(id)
-    print(hashed_id)
     encrypted_id = RSA(RSA(hashed_id, private_src), public_dst)
 
     src_list = [int(id), encrypted_id]
     s_key = session_key_generator()
-    print(f"s_key: {s_key}")
     src_list[0] = bitwise_xor(src_list[0], s_key)
     src_list[1] = bitwise_xor(src_list[1], s_key)
+    print("Session Key: " + str(s_key))
 
     s_key_left = str(s_key)[:(len(str(s_key))//2)]
     s_key_right = str(s_key)[(len(str(s_key))//2):]
 
     enc_s_key = str(RSA(s_key_left, public_dst)) + "-" + str(RSA(s_key_right, public_dst))
 
-    print(f"enc_s_key_src: {enc_s_key}")
     src_list = list(map(str, src_list))
     src_list.append(enc_s_key)
     packet = conc(src_list)
@@ -94,40 +90,51 @@ def source(id, private_src, public_dst):
 def destination(packet, private_dst, public_src):
     src_list = packet.split(";")
     enc_s_key = src_list[2]
-    print(f"enc_s_key_dst: {enc_s_key}")
+
     enc_s_key_left = enc_s_key.split("-")[0]
     enc_s_key_right = enc_s_key.split("-")[1]
 
     s_key = int(str(RSA(enc_s_key_left, private_dst)) + str(RSA(enc_s_key_right, private_dst)))
-    
-    print(f"s_key: {s_key}")
-
+    print("Returned Session Key: " + str(s_key))
     src_list[0] = bitwise_xor(int(src_list[0]), s_key)
     src_list[1] = bitwise_xor(int(src_list[1]), s_key)
 
-    id = src_list[0]
     hashed_id_src = src_list[1]
     decrypted_hash = RSA(RSA(hashed_id_src, private_dst), public_src)
 
-    hashed_id_dst = H(id)
+    return decrypted_hash
 
-    check = (decrypted_hash == hashed_id_dst)
-    
-    print(decrypted_hash)
-    print(check)
+def verify(Hash_sent, Hash_computed):
+    if str(Hash_sent) == str(Hash_computed):
+        print("Verified")
+    else:
+        print("Verification Failed")
 
 def main():
     public_src, private_src = key_generator(5501, 4481)
     public_dst, private_dst = key_generator(6733, 6073)
 
-    print(f"public_src: {public_src} | private_src: {private_src}")
-    print(f"public_dst: {public_dst} | private_dst: {private_dst}")
-
     id = file_reader()
+
+    print("-"*42)
+    print("Original ID: " + str(id))
+
+    print("-"*42)
+    print("Source Public Key: {" + str(public_src) + "}")
+    print("Source Private Key: {" + str(private_src) + "}")
+    print("Destination Public Key: {" + str(public_dst) + "}")
+    print("Destination Private Key: {" + str(private_dst) + "}")
+    print("-"*42)
 
     source_packet = source(id, private_src, public_dst)
 
-    destination(source_packet, private_dst, public_src)
+    hash_computed = destination(source_packet, private_dst, public_src)
+    print("-"*42)
+    print("Original Hashed ID (CRC-16/MODBUS): " + str(hex(H(id))))
+    print("Computed Hash: " + str(hex(hash_computed)))
+    print("-"*42)
+    verify(H(id), hash_computed)
+    print("-"*42)
 
 if __name__ == "__main__":
     main()
